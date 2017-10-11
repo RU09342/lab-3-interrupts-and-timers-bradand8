@@ -54,13 +54,15 @@ __interrupt void Port_1(void){
 ```
 The code is intended to only toggle the LED when the button is pressed, as indicated to the processor by the interrupt flag. If we un-negate the ~P1IN bit, the LED will toggle originally and only pause when the button is pressed.
 
-## Task
-Your goal for this part of the lab is to replicate your button code from Lab 2, where the LED should change states only when the button is pressed. This can be extended to include behaviors such as only have the LED on when the button is depressed, or have the LED blink one color when pressed and another when it is let go. Another behavior extends from the second lab which is speed control based on the button presses. For example, have the rate of the LED cycle between a "low", "Medium", and "High" rate of speed.
+## Differences Among Micro Processors
+* MSP430G2553
+* MSP430FR2311
+* MSP430FR6989 
+* MSP430F5529  - The interrupt vectors for the F5529 processor all occur on port 2 instead of port 1
+* MSP430FR5994 - The interrupt vectors for the FR5994 occur on port 5 instead of port 1
 
-## Extra Work 
-### Binary Counter/Shift Register
-Either use a function generator, another processor, or a button to control your microcontroller as an 8-bit binary counter using 8 LEDs to indicate the current status of the counter.
+Aside from that, the only things necessary to change are the bits that correspond with the buttons, just like the button blink code.
 
 ## Extra Work Multiple Buttons
-Come up with a behavior of your own that incorporates needing to use two buttons or more and these two buttons must be implemented using interrupts.
+The extra work for this Lab involved using two different buttons for two interrupts on the MSP430F5529. Two pragma vector, Port 1 and Port 2, were used for the interrupts and both interrupts toggled at different speeds.
 
