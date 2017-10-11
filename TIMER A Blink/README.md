@@ -1,15 +1,96 @@
 # TIMER A Blink
-The TIMER peripherals can be used in many situations thanks to it flexibility in features. For this lab, you will be only scratching the surface as to what this peripheral can do. 
+This lab introduces the use of the built in timers of the MSP430 devices. Using timer interrupts are useful to determine a specific rate at which an LED will blink. 
 
-## Up, Down, Continuous 
-There are a few different ways that the timer module can count. For starters, one of the easiest to initialize is Continuous counting where in the TIMER module will alert you when its own counting register overflows. Up mode allows you to utilize a Capture/Compare register to have the counter stop at a particular count and then start back over again. You can also set the TIMER to Up/Down mode where upon hitting a counter or the overflow, instead of setting the counter back to zero, it will count back down to zero. 
+## Clock sources
+The timer is composed of a 16-bit timer counter. The TAXR register either increments or decrements with the rising edge of the clock signal. By Setting TASSEL bits, the clock sources can be selected. The source can also be further divided by TAIDEX bits. Using TACTL allows the user to choose a clock, count mode and further clock division as desired. 
+* TASSEL 0    -- TAXCLK
+* TASSEL 1    -- ACLK, 32K Hz frequency 
+* TASSEL 2    -- SMCLK 1M Hz frequency
+* TASSEL 3    -- INCLK
 
-## Task
-Using the TIMER module instead of a software loop, control the speed of two LEDS blinking on your development boards. Experiment with the different counting modes available as well as the effect of the pre-dividers. Why would you ever want to use a pre-divider? What about the Capture and Compare registers? Your code should include a function (if you want, place it in its own .c and .h files) which can convert a desired Hz into the proper values required to operate the TIMER modules.
+##  Timer Modes 
+There are different modes for a timer that indicate how the timer will count and can be selected via Timer Mode Control (MC).
+* MC_0      -- stops the timer
+* MC_1      -- Up count Mode, timer counts from 0 to a specific value set by TAXCCR0
+* MC_2      -- Continuous count Mode, timer counts from zero to 0FFFFh.
+* MC_3      -- Up/Down Mode, timer counts from zero to a value of TAXCCR0 and then backwards to zero from there.
 
-### Extra Work
-#### Thinking with HALs
-So maybe up to this point you have noticed that your software is looking pretty damn similar to each other for each one of these boards. What if there was a way to abstract away all of the particulars for a processor and use the same functional C code for each board? Just for this simple problem, why don't you try and build a "config.h" file which using IFDEF statements can check to see what processor is on board and initialize particular registers based on that.
+ 
+## Base code MSP430G2553
+The following code toggles two LEDs at a speed set by the timers. Pre dividers can be included by adding an ID_X to the TA0CTL. Enabling two capture compare registers and a corresponding interrupt vector allows for a specific frequency to be set at which each LED toggles.
+Timer_A interrupt enable TAIE, and TAIFG Timer_A interrupt flag  are used to enable the interrupts and keep track of when they occur.
 
-#### Low Power Timers
-Since you should have already done a little with interrupts, why not build this system up using interrupts and when the processor is basically doing nothing other than burning clock cycles, drop it into a Low Power mode. Do a little research and figure out what some of these low power modes actually do to the processor, then try and use them in your code. If you really want to put your code to the test, using the MSP430FR5994 and the built in super cap, try and get your code to run for the longest amount of time only using that capacitor as your power source.
+The interrupt service routine utilizes a switch statement based on the TA0IV (interrupt vector for capture compare flags) toggles the specific LED when the capture compare register value is reached. TA0IV returns an even value corresponding to the highest priority pending interrupt. 
+
+The code for the MSP430G2553 is given below:
+
+```
+#define LED_0      BIT0      //Sets the pin for first LED1
+#define LED_1      BIT7      //Sets the pin for the second LED2
+#define LED1_OUT    P1OUT
+#define LED2_OUT    P4OUT
+#define LED1_DIR    P1DIR
+#define LED2_DIR    P4DIR
+
+
+void main(void){
+
+    WDTCTL = WDTPW + WDTHOLD; // Stop watchdog timer
+
+
+    LED1_DIR |= (LED_0);      //Sets pins as output directions as defined above
+    LED2_DIR |= (LED_1);
+
+    LED1_OUT &= ~(LED_0);    //Sets the LEDs off by anding the bits with 0
+    LED2_OUT &= ~(LED_1);
+
+    TA0CCTL2 = CCIE;                 //enables Capture Compare Register CCR2 interrupt
+    TA0CCTL1 = CCIE;
+    TA0CTL = TASSEL_2 + MC_2 + ID_3; // Set the timer A to SMCLCK, Continuos Mode, sets clock division to 8.
+    TA0CCR2 = 15625;                  // 8Hz   --- 1000000/8/8 = 15625
+    TA0CCR1 = 62500;                  // 2Hz   --- 1000000/8/2 = 62500
+
+
+    __bis_SR_register(LPM0_bits + GIE); // LPM0 with general interrupts enabled
+
+}
+
+
+    // Timer A interrupt service routine
+    #pragma vector = TIMER0_A1_VECTOR
+    __interrupt void Timer_A( void )
+    {
+        switch( TA0IV ){      
+        case 2: // TA0CCR1
+    {
+        LED2_OUT ^= LED_1;        //Toggles LED1
+        TA0CCR1 += 62500;
+    }
+      break;
+      case 4: // TA0CCR2
+    {
+        LED1_OUT ^= LED_0;         //Toggles LED2
+        TA0CCR2 += 15625;
+    }
+      break;
+
+    case 10: // Overflow - TA0IFG
+    {}
+      break;
+    }
+  }
+```
+## Difference between micro Processors
+
+* MSP430G2553
+* MSP430FR2311    *Note no Timer A*
+* MSP430FR6989
+* MSP430F5529
+* MSP430FR5994
+
+To make the transitioning between microprocessors easier, the top of the program defines parameters for the bit that must be toggled for LED 1 and 2, aswell as the port output and direction. Based on the particular microprocessor, all that needs to be changed are these bits. The one exception is the FR2311 which has no A timer, but instead a B timer that requires the Registers and the interrupt service routine vectors to be changed from A to B.
+
+## Advantage to using a Timer to blink an LED
+Aside from the easibility to set a frequency for blinking the LEDs, each timer can use multiple capture compare registers to access seperate LEDs with the same timer.
+
+
