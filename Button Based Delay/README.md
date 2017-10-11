@@ -24,3 +24,5 @@ For the shared differences: the button and LED bits are defined at the top of ea
 The following link will take you to a video clip of the Button Delay on the MSP430G2553.
 
 [Button Delay Link](https://drive.google.com/open?id=0B8jO6C1Q7JLHZFFyTFVXUmgtdWc)
+
+*NOTE:* The video needs to be downloaded to view.
