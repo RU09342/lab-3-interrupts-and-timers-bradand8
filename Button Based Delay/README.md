@@ -7,16 +7,17 @@ The initial LED frequency should be at the rate of 10Hz upon first starting up. 
 ## The Code Key Concepts
 As discussed in specififications, the initial Frequency should be 10Hz. To do this an additional method was written that divides the clock by the desired frequency, stores this frequency in the Timer Capture Comper register, and this allows the desired frequency to be chosen by calling the function with the desired frequency as a parameter. For Example
 
-``` startTimer(10); ```
+``` startTimer(10); ```   //Calculates the Frequency to start at 10Hz
 
-The timer interrupt service routine is used to blink the Leand the Port interrupt service routines are used to
+The timer interrupt service routine is used to blink the LED and the Port interrupt service routines are used to set the new timer interrupt service value based on how long the button was pressed. Unsigned integer values were created to hold various information needed in the ISRs. 
+
+## Differences Among Micro Processors
+1. MSP430G2553    
+2. MSP430FR6989
+3. MSP430FR5994
+4. MSP430FR2311   --The interrupt Vectors and Timer Vectors must be in reference to BClock instead of AClock.
+5. MSP430F5529
+
+For the shared differences: the button and LED bits are defined at the top of each code, and their definitions only need to be changed based on the pins for the LED outputs and the BUTTON inputs. The port resistor enables for either a pullup or pulldown resistor need to be changed to the port associated with the button in the main function. The Port IN, and Port interrupt edge select must also be changed in accordance with the port of the button.
 
 
-Setup your microcontroller to initially blink and LED at a rate of 10Hz upon restarting or powering up. Then utilizing one of the buttons on board, a user should be able to set the delay or blinking rate of the LED by holding down a button. The duration in which the button is depressed should then become the new rate at which the LED blinks. As previously stated, you most likely will want to take advantage of the fact that TIMER modules exist and see if you can let them do a bulk of the work for you. 
-
-### Extra Work
-## Reset Button
-What is a piece of electronics without a reset button? Instead of relying on resetting your processor using the built in reset circuitry, why not instead use another button to reset the rate back to 10Hz.
-
-## Button Based Hertz
-Most likely using two buttons, what if instead of making a delay loop based on the time, the user could instead enter a mode where the number of times they pressed the button would become the number in Hz of the blinking rate? How do you think you would implement that with just one button?
