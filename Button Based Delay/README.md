@@ -20,4 +20,7 @@ The timer interrupt service routine is used to blink the LED and the Port interr
 
 For the shared differences: the button and LED bits are defined at the top of each code, and their definitions only need to be changed based on the pins for the LED outputs and the BUTTON inputs. The port resistor enables for either a pullup or pulldown resistor need to be changed to the port associated with the button in the main function. The Port IN, and Port interrupt edge select must also be changed in accordance with the port of the button.
 
+## Video Clip of Button Delay
+The following link will take you to a video clip of the Button Delay on the MSP430G2553.
 
+[Button Delay Link](https://drive.google.com/open?id=0B8jO6C1Q7JLHZFFyTFVXUmgtdWc)
